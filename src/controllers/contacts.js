@@ -11,12 +11,16 @@ import { parseFilterParams } from '../utils/parseFilterParams.js';
 
 
 export const getContactsController = async (req, res) => {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
     const { page, perPage } = parsePaginationParams(req.query);
     const { sortBy, sortOrder } = parseSortParams(req.query);
     const filter = parseFilterParams(req.query);
     const successStatus = 200;
 
     const contacts = await getAllContacts({
+        userId,
         page,
         perPage,
         sortBy,
@@ -32,8 +36,11 @@ export const getContactsController = async (req, res) => {
 };
 
 export const getContactByIdController = async (req, res) => {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
     const { contactId } = req.params;
-    const contact = await getContactById(contactId);
+    const contact = await getContactById(userId, contactId);
     const successStatus = 200;
     const errorStatus = 404;
     
@@ -53,7 +60,10 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-    const contact = await createContact(req.body);
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
+    const contact = await createContact(userId, req.body);
     const successStatus = 201;
 
     return res.status(successStatus).json({
@@ -64,8 +74,11 @@ export const createContactController = async (req, res) => {
 };
 
 export const deleteContactController = async (req, res) => {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
     const { contactId } = req.params;
-    const deleted = await deleteContact(contactId);
+    const deleted = await deleteContact(userId, contactId);
     const successStatus = 204;
     const errorStatus = 404;
 
@@ -81,9 +94,12 @@ export const deleteContactController = async (req, res) => {
 };
 
 export const upsertContactController = async (req, res) => {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
     const { contactId } = req.params;
 
-    const result = await updateContact(contactId, req.body, {
+    const result = await updateContact(userId, contactId, req.body, {
         upsert: true,
     });
 
@@ -107,8 +123,11 @@ export const upsertContactController = async (req, res) => {
 };
 
 export const patchContactController = async (req, res) => {
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authorized' });
+
     const { contactId } = req.params;
-    const updated = await updateContact(contactId, req.body);
+    const updated = await updateContact(userId, contactId, req.body);
     const successStatus = 200;
     const errorStatus = 404;
 
