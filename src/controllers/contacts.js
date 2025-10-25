@@ -8,6 +8,9 @@ import {
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
+import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
 
 
 export const getContactsController = async (req, res) => {
@@ -127,7 +130,22 @@ export const patchContactController = async (req, res) => {
     if (!userId) return res.status(401).json({ message: 'Not authorized' });
 
     const { contactId } = req.params;
-    const updated = await updateContact(userId, contactId, req.body);
+    const photo = req.file;
+    let photoUrl;
+
+    if (photo) {
+        if (getEnvVar('ENABLE_CLOUDINARY') === 'true') {
+            photoUrl = await saveFileToCloudinary(photo);
+        } else {
+            photoUrl = await saveFileToUploadDir(photo);
+        }
+    }
+
+    const updated = await updateContact(userId, contactId, {
+        ...req.body,
+        photo: photoUrl,
+    });
+
     const successStatus = 200;
     const errorStatus = 404;
 
