@@ -66,7 +66,21 @@ export const createContactController = async (req, res) => {
     const userId = req.user && req.user._id;
     if (!userId) return res.status(401).json({ message: 'Not authorized' });
 
-    const contact = await createContact(userId, req.body);
+    const photo = req.file;
+    let photoUrl;
+
+    if (photo) {
+        if (getEnvVar('ENABLE_CLOUDINARY') === 'true') {
+            photoUrl = await saveFileToCloudinary(photo);
+        } else {
+            photoUrl = await saveFileToUploadDir(photo);
+        }
+    }
+
+    const contact = await createContact(userId, {
+        ...req.body,
+        photo: photoUrl,
+    });
     const successStatus = 201;
 
     return res.status(successStatus).json({
